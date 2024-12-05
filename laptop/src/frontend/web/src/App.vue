@@ -64,7 +64,7 @@ body {
 
 .main-content {
     padding: 2rem;
-    margin-top: 70px;
+    margin-top: 5px;
 }
 
 @media (max-width: 768px) {

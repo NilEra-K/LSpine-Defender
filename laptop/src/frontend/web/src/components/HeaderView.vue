@@ -2,7 +2,7 @@
     <div class="header" :class="{ 'sidebar-collapsed': isSidebarCollapsed }">
         <div class="header-content">
             <div class="page-title">
-                <h1>基于计算机视觉的脊柱姿态评估系统</h1>
+                <h1>基于多模型优化的腰椎退行性病变分类系统的设计与实现</h1>
             </div>
             <div class="header-actions">
                 <div class="search-box">

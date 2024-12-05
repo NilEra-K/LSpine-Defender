@@ -12,6 +12,10 @@
                 <i class="fas fa-home"></i>
                 <span>首页</span>
             </router-link>
+            <router-link to="/stage-one" class="nav-item" active-class="active" @click="handleNavClick">
+                <i class="fas fa-microscope"></i>
+                <span>一阶段</span>
+            </router-link>
             <router-link to="/feature-one" class="nav-item" active-class="active" @click="handleNavClick">
                 <i class="fas fa-chart-line"></i>
                 <span>姿态检测</span>
