@@ -84,6 +84,9 @@
 </template>
 
 <script>
+// 添加 axios 导入
+import axios from 'axios';
+
 export default {
     name: 'StageOneView',
     data() {
@@ -93,7 +96,8 @@ export default {
             resultList: Array(75).fill().map((_, i) => ({
                 parameter: `参数 ${i + 1}`,
                 value: '0'
-            }))
+            })),
+            isLoading: false  // 添加加载状态
         }
     },
     methods: {
@@ -101,9 +105,24 @@ export default {
             this.$refs.fileInput.click()
         },
         handleFileChange(event) {
-            const file = event.target.files[0]
+            const file = event.target.files[0];
             if (file) {
-                this.loadImage(file)
+                // 验证文件类型
+                if (!file.type.startsWith('image/')) {
+                    alert('请上传图片文件！');
+                    return;
+                }
+
+                // 验证文件大小（例如限制为 5MB）
+                if (file.size > 5 * 1024 * 1024) {
+                    alert('文件大小不能超过 5MB！');
+                    return;
+                }
+
+                this.loadImage(file);
+
+                // 可选：清空文件输入框的值，这样用户可以重复上传同一个文件
+                event.target.value = '';
             }
         },
         handleDrop(event) {
@@ -117,10 +136,14 @@ export default {
             reader.onload = (e) => {
                 this.originalImage = e.target.result
             }
+            reader.onerror = () => {
+                alert('图片加载失败，请重试！');
+            };
             reader.readAsDataURL(file)
         },
         handleUpload() {
             // 实现上传逻辑
+            this.$refs.fileInput.click();
         },
         handleClear() {
             this.originalImage = null
@@ -130,8 +153,48 @@ export default {
                 value: '0'
             }))
         },
-        handlePredict() {
+        async handlePredict() {
             // 实现预测逻辑
+            if (!this.originalImage) {
+                alert('请先上传图片！');
+                return;
+            }
+            try {
+                this.isLoading = true;
+                // 将 base64 图片转换为 Blob
+                const base64Data = this.originalImage.split(',')[1];
+                const blob = await fetch(`data:image/jpeg;base64,${base64Data}`).then(res => res.blob());
+                
+                // 创建 FormData
+                const formData = new FormData();
+                formData.append('image', blob, 'image.jpg');
+
+                // 发送请求到后端
+                const response = await axios.post('http://127.0.0.1:16020/api/v1/predict', formData, {
+                    headers: {
+                        'Content-Type': 'multipart/form-data'
+                    }
+                });
+                
+                // 处理响应
+                if (response.data) {
+                    // 假设后端返回的数据格式为 { image: base64String, parameters: [...] }
+                    this.resultImage = `data:image/jpeg;base64,${response.data.image}`;
+                    
+                    // 更新参数列表
+                    if (response.data.parameters) {
+                        this.resultList = response.data.parameters.map((value, index) => ({
+                            parameter: `参数 ${index + 1}`,
+                            value: value.toString()
+                        }));
+                    }
+                }
+            } catch (error) {
+                console.error('预测失败:', error);
+                alert('预测失败，请重试！');
+            } finally {
+                this.isLoading = false;
+            }
         }
     }
 }
@@ -329,6 +392,38 @@ th {
 
 td {
     color: #4b5563;
+}
+
+/* 添加加载状态样式 */
+.loading {
+    position: relative;
+    pointer-events: none;
+    opacity: 0.7;
+}
+
+.loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 30px;
+    height: 30px;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #3498db;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: translate(-50%, -50%) rotate(0deg); }
+    100% { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+/* 预测按钮禁用状态 */
+.action-btn.predict:disabled {
+    background-color: #9ca3af;
+    cursor: not-allowed;
 }
 
 @media (max-width: 1280px) {
