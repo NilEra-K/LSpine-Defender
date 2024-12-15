@@ -9994,3 +9994,6 @@ laptop/src/frontend/web/node_modules/css-tree/lib/lexer/match.js
 laptop/src/frontend/web/node_modules/css-tree/lib/lexer/prepare-tokens.js
 laptop/src/frontend/web/node_modules/css-tree/lib/lexer/search.js
 laptop/src/frontend/web/package-lock.json
+laptop/src/backend/app/__pycache__
+laptop/src/backend/app/modules/api/__pycache__
+laptop/src/backend/app/modules/__pycache__

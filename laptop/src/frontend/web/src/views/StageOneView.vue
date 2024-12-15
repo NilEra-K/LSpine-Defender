@@ -93,9 +93,9 @@ export default {
         return {
             originalImage: null,
             resultImage: null,
-            resultList: Array(75).fill().map((_, i) => ({
-                parameter: `参数 ${i + 1}`,
-                value: '0'
+            resultList: Array(75).fill().map(() => ({
+                parameter: '待测参数',
+                value: '-'
             })),
             isLoading: false  // 添加加载状态
         }
@@ -148,9 +148,9 @@ export default {
         handleClear() {
             this.originalImage = null
             this.resultImage = null
-            this.resultList = Array(75).fill().map((_, i) => ({
-                parameter: `参数 ${i + 1}`,
-                value: '0'
+            this.resultList = Array(75).fill().map(() => ({
+                parameter: '待测参数',
+                value: '-'
             }))
         },
         async handlePredict() {
@@ -181,12 +181,15 @@ export default {
                     // 假设后端返回的数据格式为 { image: base64String, parameters: [...] }
                     this.resultImage = `data:image/jpeg;base64,${response.data.image}`;
                     
-                    // 更新参数列表
+                    // 更新处理参数列表的逻辑
                     if (response.data.parameters) {
-                        this.resultList = response.data.parameters.map((value, index) => ({
-                            parameter: `参数 ${index + 1}`,
-                            value: value.toString()
-                        }));
+                        this.resultList = response.data.parameters.map(param => {
+                            const [paramName, value] = Object.entries(param)[0];
+                            return {
+                                parameter: paramName,
+                                value: value.toString()
+                            };
+                        });
                     }
                 }
             } catch (error) {
