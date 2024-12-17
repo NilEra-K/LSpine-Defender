@@ -29,7 +29,6 @@ from sklearn.metrics import log_loss
 # 配置项 Config
 NOT_DEBUG = False                                           # True -> 正常运行, False -> 调试模式
 
-OUTPUT_DIR = 'rsna24-results'
 device = 'cuda:0' if torch.cuda.is_available() else 'cpu'   # 选择合适的运算设备
 N_WORKERS = os.cpu_count()                                  # 选择合适的工作线程数
 USE_AMP = True                                              # 如果使用T4或更新的Ampere可以更改为True
@@ -58,6 +57,7 @@ AUG = True
 
 # 常量: ROOT_DIR
 RD = 'workstation/data/rsna2024_small'
+OUTPUT_DIR = 'workstation/competition/one-stage/rsna24-results'
 
 CONDITIONS = [
     'Spinal Canal Stenosis', 
