@@ -9997,3 +9997,4 @@ laptop/src/frontend/web/package-lock.json
 laptop/src/backend/app/__pycache__
 laptop/src/backend/app/modules/api/__pycache__
 laptop/src/backend/app/modules/__pycache__
+workstation/data
