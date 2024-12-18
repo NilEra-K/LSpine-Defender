@@ -1,3 +1,4 @@
+"""模型训练代码"""
 # RSNA2024 LSDC Training Baseline
 # 训练模型代码: 需要先执行 rsna-making-dataset.py
 
@@ -27,33 +28,41 @@ import albumentations as A
 from sklearn.metrics import log_loss
 
 # 配置项 Config
-NOT_DEBUG = False                                           # True -> 正常运行, False -> 调试模式
+# Remember to change NOT_DEBUG to True for real training
+NOT_DEBUG = True # True -> Run Normally, False -> Debug Mode, With Lesser Computing Cost
 
-device = 'cuda:0' if torch.cuda.is_available() else 'cpu'   # 选择合适的运算设备
-N_WORKERS = os.cpu_count()                                  # 选择合适的工作线程数
-USE_AMP = True                                              # 如果使用T4或更新的Ampere可以更改为True
-SEED = 8620
+device = 'cuda:0' if torch.cuda.is_available() else 'cpu'   # 定义运算设备
+N_WORKERS = os.cpu_count()                                  # 定义线程数量: 线程数量为 CPU 的核心数
+USE_AMP = True                                              # 当使用 T4 或者更新版本的安培(Ampere)架构 GPU 时, 则可以修改为 True
+                                                            # RTX 30系列即安培架构
+SEED = 8620                                                 # 随机种子
 
-IMG_SIZE = [512, 512]
-IN_CHANS = 30
-N_LABELS = 25
-N_CLASSES = 3 * N_LABELS
+IMG_SIZE = [512, 512]                                       # 设置进行运算的图片的大小为 512*512
+IN_CHANS = 30                                               # 设置输入的通道数为 30
+N_LABELS = 25                                               # 设置需要预测的标签为 5 * 5 个
+N_CLASSES = 3 * N_LABELS                                    # 设置需要预测的类别为 5 * 5 * 3 个
 
-AUG_PROB = 0.75
+AUG_PROB = 0.75                                             # 通常用于数据增强的概率设置, 它表示在数据预处理阶段, 以75%的概率应用某种数据增强操作。这种随机性有助于提高模型的泛化能力，使其对未见过的数据表现更好。
+# SELECTED_FOLDS = [0]                                      # 未使用, 选中训练的 FOLD
+N_FOLDS = 5 if NOT_DEBUG else 2                             # 设置 K折交叉验证的数量, 如果 NOT_DEBUG 为 True 则为 5 折, 否则为 2 折
+EPOCHS = 10 if NOT_DEBUG else 2                             # 设置 K折交叉验证的数量, 如果 NOT_DEBUG 为 True 则为 5 折, 否则为 2 折
 
-N_FOLDS = 5 if NOT_DEBUG else 2
-EPOCHS = 20 if NOT_DEBUG else 2
-MODEL_NAME = "tf_efficientnet_b3.ns_jft_in1k" if NOT_DEBUG else "tf_efficientnet_b0.ns_jft_in1k"
+# 可以更换模型名称, 以切换使用的模型, 我们可以访问 timm库的开源网站来选取模型, 使用如下
+# MODEL_NAME = "tf_efficientnet_b4.ns_jft_in1k" if NOT_DEBUG else "tf_efficientnet_b0.ns_jft_in1k"
+# TODO: you can choose other convolutional neural network (CNN) architectures designed to 
+#       achieve state-of-the-art accuracy in various computer vision tasks
+MODEL_NAME = "tf_efficientnet_b4.ns_jft_in1k" if NOT_DEBUG else "tf_efficientnet_b0.ns_jft_in1k"  # 设置模型名称 测试多个模型
+# MODEL_NAME = "resnet101.a1h_in1k" if NOT_DEBUG else "mobilenetv4_hybrid_medium.e200_r256_in12k_ft_in1k"
 
-GRAD_ACC = 2
-TGT_BATCH_SIZE = 2
-BATCH_SIZE = TGT_BATCH_SIZE // GRAD_ACC
-MAX_GRAD_NORM = None
-EARLY_STOPPING_EPOCH = 3
+GRAD_ACC = 2                                                # 梯度累积步数, 用于模拟更大的批量大小, 通过累积多个小批次的梯度再更新模型参数
+TGT_BATCH_SIZE = 32                                         # 设置目标批量大小, 目标批量大小, 指希望在参数更新时的有效批量大小
+BATCH_SIZE = TGT_BATCH_SIZE // GRAD_ACC                     # 实际每次训练的批量大小, 计算方式为 TGT_BATCH_SIZE // GRAD_ACC, 即每次训练使用较小的批次, 但经过 GRAD_ACC 次梯度累积后, 达到目标批量大小
+MAX_GRAD_NORM = None                                        # 最大梯度范数, 用于梯度裁剪, 防止梯度爆炸. 如果为 None, 则不进行梯度裁剪
+EARLY_STOPPING_EPOCH = 3                                    # 设置提前停止的轮数. 用于早停策略, 如果验证集性能在指定轮数内没有改善, 则停止训练
 
-LR = 2e-4 * TGT_BATCH_SIZE / 32
-WD = 1e-2
-AUG = True
+LR = 2e-4 * TGT_BATCH_SIZE / 32                             # 设置学习率, 根据目标批量大小进行线性缩放(2e-4 * TGT_BATCH_SIZE / 32), 确保学习率适应不同批量大小。
+WD = 1e-2                                                   # 设置权重衰减(Weight Decay)。用于正则化，防止过拟合，通常在优化器中作为参数。
+AUG = True                                                  # 设置是否开启数据增强, 即是否应用数据增强技术。
 
 # 常量: ROOT_DIR
 RD = 'workstation/data/rsna2024_small'
@@ -164,35 +173,53 @@ class RSNA24Dataset(Dataset):
 
 # 定义数据增强
 def get_transforms():
+    # 训练集使用的变换
     transforms_train = A.Compose([
-        A.RandomBrightnessContrast(brightness_limit=(-0.2, 0.2), contrast_limit=(-0.2, 0.2), p=AUG_PROB),
+        # 将一系列数据增强操作组合在一起
+        # 随机调整图像的亮度(brightness_limit)和对比度(contrast_limit), 范围在[-0.2, 0.2]之间, 概率为AUG_PROB
+        # A.RandomBrightnessContrast(brightness_limit=(-0.2, 0.2), contrast_limit=(-0.2, 0.2), p=AUG_PROB),
+        
+        # 从以下操作中随机选择一个应用
         A.OneOf([
-            A.MotionBlur(blur_limit=5),
-            A.MedianBlur(blur_limit=5),
-            A.GaussianBlur(blur_limit=5),
-            A.GaussNoise(var_limit=(5.0, 30.0)),
+            # A.MotionBlur(blur_limit=2),                         # 随机应用运动模糊, 模糊程度最大为 1
+            A.MedianBlur(blur_limit=3),                         # 随机应用中值模糊, 模糊程度最大为 5
+            # A.GaussianBlur(blur_limit=2),                       # 随机应用高斯模糊, 模糊程度最大为 1
+            A.GaussNoise(var_limit=(5.0, 30.0)),                # 随机添加高斯噪声, 方差范围在[5.0, 30.0]之间
         ], p=AUG_PROB),
-
-        A.OneOf([
-            A.OpticalDistortion(distort_limit=1.0),
-            A.GridDistortion(num_steps=5, distort_limit=1.),
-            A.ElasticTransform(alpha=3),
-        ], p=AUG_PROB),
-
+        
+        # 从以下操作中随机选择一个应用
+        # A.OneOf([
+        #     A.OpticalDistortion(distort_limit=1.0),             # 随机光学畸变, 畸变程度最大为 1.0
+        #     A.GridDistortion(num_steps=5, distort_limit=1.),    # 随机网格畸变, 步数为5, 畸变程度最大为 1.0
+        #     A.ElasticTransform(alpha=1),                        # 随机弹性变换, 强度为3
+        # ], p=AUG_PROB),
+        
+        # 随机平移、缩放、旋转图像
+        # 平移范围 (shift_limit)  在 [-0.1, 0.1]
+        # 缩放范围 (scale_limit)  在 [-0.1, 0.1]
+        # 旋转角度 (rotate_limit) 在 [-15, 15]度之间
+        # 填充边界 (border_mode)  为 0 表示用 0 填充边界
         A.ShiftScaleRotate(shift_limit=0.1, scale_limit=0.1, rotate_limit=15, border_mode=0, p=AUG_PROB),
+
+        # 将图像调整为指定大小IMG_SIZE
         A.Resize(IMG_SIZE[0], IMG_SIZE[1]),
-        A.CoarseDropout(max_holes=16, max_height=64, max_width=64, min_holes=1, min_height=8, min_width=8, p=AUG_PROB),    
+
+        # 随机遮挡图像的一部分, 最多16个孔, 孔的高度和宽度最大为64, 最小为8
+        A.CoarseDropout(max_holes=16, max_height=16, max_width=16, min_holes=1, min_height=4, min_width=4, p=AUG_PROB),
+
+        # 将图像标准化, 均值为0.5, 标准差为0.5   
         A.Normalize(mean=0.5, std=0.5)
     ])
 
+    # 验证集使用的变换
     transforms_val = A.Compose([
         A.Resize(IMG_SIZE[0], IMG_SIZE[1]),
         A.Normalize(mean=0.5, std=0.5)
     ])
 
+    # 如果 NOT_DEBUG 为 False, 将训练集变换设置为与验证集相同, 不进行数据增强
     if not NOT_DEBUG or not AUG:
         transforms_train = transforms_val
-        
     return transforms_train, transforms_val
 
 
@@ -224,6 +251,21 @@ def try_dataloader():
 
 
 # 定义模型
+sys.path.append('workstation/lib/efficient-kan-master/src')
+from efficient_kan import KAN
+
+def replace_linear_with_kan(module):
+    for name, sub_module in module.named_children():
+        # if sub_module is a linear layer (MLP), replace it with KAN
+        if isinstance(sub_module, nn.Linear):
+            in_features = sub_module.in_features
+            out_features = sub_module.out_features
+            # hidden_layers = min(in_features, out_features)  # or other way to determine hidden_layers
+            hidden_layers = min(in_features, out_features) * 2
+            setattr(module, name, KAN([in_features, hidden_layers, out_features]))
+        else:
+            replace_linear_with_kan(sub_module)
+
 class RSNA24Model(nn.Module):
     def __init__(self, model_name, in_c=30, n_classes=75, pretrained=True, features_only=False):
         super().__init__()
@@ -235,6 +277,7 @@ class RSNA24Model(nn.Module):
             num_classes=n_classes,
             global_pool='avg'
         )
+        replace_linear_with_kan(self.model)
     
     def forward(self, x):
         y = self.model(x)
