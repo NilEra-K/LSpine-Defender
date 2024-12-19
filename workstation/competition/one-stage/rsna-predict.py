@@ -286,9 +286,23 @@ def inference_model():
                     y_preds.append(pred_per_study)
 
     y_preds = np.concatenate(y_preds, axis=0)
+    # print(y_preds)
+    return row_names, y_preds
+
+
+def output_result(row_names, y_preds):
+    sample_sub = pd.read_csv(f'{RD}/sample_submission.csv')
+    LABELS = list(sample_sub.columns[1:])
+    sub = pd.DataFrame()
+    sub['row_id'] = row_names
+    sub[LABELS] = y_preds
+    # sub.head(25)
+    return sub.to_json()
+    
 
 def main():
-    inference_model()
+    row_names, y_preds = inference_model()
+    print(output_result(row_names=row_names, y_preds=y_preds))
     
 
 if __name__ == "__main__":
