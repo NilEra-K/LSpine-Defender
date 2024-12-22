@@ -5,7 +5,7 @@ from torchvision import transforms
 from PIL import Image
 import numpy as np
 
-N_WORKERS = 1
+N_WORKERS = 0
 class_names = ["Axial_T2", "Sagittal_T1", "Sagittal_T2_STIR"]
 
 class CustomDataset(Dataset):

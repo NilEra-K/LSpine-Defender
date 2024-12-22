@@ -34,7 +34,7 @@ def split_dataset_by_class(source_dir, train_dir, valid_dir, test_dir, split_rat
         # Split the valid_test_images into valid and test sets
         valid_images, test_images = train_test_split(valid_test_images, test_size=split_ratio[2]/sum(split_ratio[1:]), stratify=valid_test_labels, random_state=42)
 
-        # Ensure class subdirectories exist in train, valid, and test directories
+        # 确保每个类的子目录在训练、验证和测试目录中都存在
         for directory in [train_dir, valid_dir, test_dir]:
             class_subdir = os.path.join(directory, class_dir)
             os.makedirs(class_subdir, exist_ok=True)
@@ -60,11 +60,11 @@ def split_dataset_by_class(source_dir, train_dir, valid_dir, test_dir, split_rat
 
 
 
-# Define the paths to the directories
-source_dir = 'workstation/data/rsna2024_small/mic-images'
-train_dir = 'workstation/data/rsna2024_small/mic-split/train_images'
-valid_dir = 'workstation/data/rsna2024_small/mic-split/valid_images'
-test_dir = 'workstation/data/rsna2024_small/mic-split/test_images'
+# 定义路径
+source_dir = 'E:/RSNA-Dataset/mic-images'
+train_dir = 'E:/RSNA-Dataset/mic-split/train_images'
+valid_dir = 'E:/RSNA-Dataset/mic-split/valid_images'
+test_dir = 'E:/RSNA-Dataset/mic-split/test_images'
 
-# Split the dataset
+# 划分数据集
 split_dataset_by_class(source_dir, train_dir, valid_dir, test_dir)
