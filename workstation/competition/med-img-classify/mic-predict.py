@@ -29,6 +29,67 @@ def predict_image(image_path, model, class_names, device):
 
     return predicted_label
 
+# 定义推理函数
+def predict_image_with_prob(image_path, model, class_names, device):
+    # 图像预处理
+    transform = transforms.Compose([
+        transforms.Resize(512),
+        # transforms.CenterCrop(224),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=0.5, std=0.5)  # ImageNet的均值和标准差
+    ])
+
+    # 加载图像
+    image = Image.open(image_path).convert('RGB')
+    image = transform(image).unsqueeze(0)  # 增加批次维度
+
+    # 推理
+    with torch.no_grad():  # 不计算梯度
+        inputs = image.to(device)
+        outputs = model(inputs)
+        probabilities = torch.nn.functional.softmax(outputs, dim=1)  # 计算概率
+
+    # 获取预测标签和概率
+    preds = torch.argmax(probabilities, dim=1)
+    predicted_label = class_names[preds.item()]
+    probabilities = probabilities[0].cpu().tolist()  # 转换为列表
+
+    # 将标签和概率匹配
+    matched_results = list(zip(class_names, probabilities))
+
+    return predicted_label, matched_results
+
+
+# 定义推理函数
+def predict_image_with_prob_imageLoaded(image, model, class_names, device):
+    # 图像预处理
+    transform = transforms.Compose([
+        transforms.Resize(512),
+        # transforms.CenterCrop(224),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=0.5, std=0.5)  # ImageNet的均值和标准差
+    ])
+
+    # 加载图像
+    image = transform(image).unsqueeze(0)  # 增加批次维度
+
+    # 推理
+    with torch.no_grad():  # 不计算梯度
+        inputs = image.to(device)
+        outputs = model(inputs)
+        probabilities = torch.nn.functional.softmax(outputs, dim=1)  # 计算概率
+
+    # 获取预测标签和概率
+    preds = torch.argmax(probabilities, dim=1)
+    predicted_label = class_names[preds.item()]
+    probabilities = probabilities[0].cpu().tolist()  # 转换为列表
+
+    # 将标签和概率匹配
+    matched_results = list(zip(class_names, probabilities))
+
+    return predicted_label, matched_results
+
+
 # 加载模型
 def load_model(model_path, class_names, device):
     model = models.resnet50(pretrained=False)  # 以非预训练模式加载模型结构

@@ -51,8 +51,10 @@ EPOCHS = 10 if NOT_DEBUG else 2                             # 设置 K折交叉�
 # MODEL_NAME = "tf_efficientnet_b4.ns_jft_in1k" if NOT_DEBUG else "tf_efficientnet_b0.ns_jft_in1k"
 # TODO: you can choose other convolutional neural network (CNN) architectures designed to 
 #       achieve state-of-the-art accuracy in various computer vision tasks
-MODEL_NAME = "tf_efficientnet_b4.ns_jft_in1k" if NOT_DEBUG else "tf_efficientnet_b0.ns_jft_in1k"  # 设置模型名称 测试多个模型
+# MODEL_NAME = "tf_efficientnet_b4.ns_jft_in1k" if NOT_DEBUG else "tf_efficientnet_b0.ns_jft_in1k"  # 设置模型名称 测试多个模型
 # MODEL_NAME = "resnet101.a1h_in1k" if NOT_DEBUG else "mobilenetv4_hybrid_medium.e200_r256_in12k_ft_in1k"
+MODEL_NAME = "densenet121" if NOT_DEBUG else "tf_efficientnet_b0.ns_jft_in1k"  # 设置模型名称 测试多个模型
+
 
 GRAD_ACC = 2                                                # 梯度累积步数, 用于模拟更大的批量大小, 通过累积多个小批次的梯度再更新模型参数
 TGT_BATCH_SIZE = 32                                         # 设置目标批量大小, 目标批量大小, 指希望在参数更新时的有效批量大小

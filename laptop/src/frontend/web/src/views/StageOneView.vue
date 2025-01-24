@@ -2,7 +2,7 @@
     <div class="stage-one-container">
         <!-- 标题和介绍部分 -->
         <div class="section-header">
-            <h2>一阶段分析</h2>
+            <h2>成像方式预测</h2>
             <p class="description">通过上传腰椎图像，系统将自动分析并生成相关参数指标</p>
         </div>
 
@@ -170,7 +170,7 @@ export default {
                 formData.append('image', blob, 'image.jpg');
 
                 // 发送请求到后端
-                const response = await axios.post('http://127.0.0.1:16020/api/v1/predict', formData, {
+                const response = await axios.post('http://127.0.0.1:16020/api/v1/mic-predict', formData, {
                     headers: {
                         'Content-Type': 'multipart/form-data'
                     }

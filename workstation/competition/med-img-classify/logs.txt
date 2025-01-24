@@ -1,0 +1,4 @@
+Epoch 1 train - Loss: 0.7757, Accuracy: 0.6434
+Epoch 1 valid - Loss: 0.5233, Accuracy: 0.7895
+Epoch 2 train - Loss: 0.3441, Accuracy: 0.8713
+Epoch 2 valid - Loss: 0.1743, Accuracy: 0.9474

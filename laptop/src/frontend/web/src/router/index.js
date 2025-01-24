@@ -3,6 +3,7 @@ import HomeView from '@/views/HomeView.vue'
 import AboutView from '@/views/AboutView.vue'
 import FeatureOneView from '@/views/FeatureOneView.vue'
 import StageOneView from '@/views/StageOneView.vue'
+import SeverityPredictView from '@/views/SeverityPredictView.vue'
 
 const routes = [
   {
@@ -29,6 +30,11 @@ const routes = [
     path: '/stage-one',
     name: 'StageOne',
     component: StageOneView
+  },
+  {
+    path: '/severity-predict',
+    name: 'SeverityPredict',
+    component: SeverityPredictView
   }
 ]
 

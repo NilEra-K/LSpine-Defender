@@ -8,4 +8,5 @@
 
 requirements:
 - albumentations: 数据增强-用法可以查阅官方文档
-- 
+- rarfile
+- py7zr

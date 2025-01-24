@@ -77,11 +77,12 @@ def load_data(rd):
 
 
 class RSNA24TestDataset(Dataset):
-    def __init__(self, df, study_ids, phase='test', transform=None):
+    def __init__(self, df, study_ids, phase='test', transform=None, root_dir=None):
         self.df = df
         self.study_ids = study_ids
         self.transform = transform
         self.phase = phase
+        self.root_dir = root_dir
     
     def __len__(self):
         return len(self.study_ids)
@@ -91,9 +92,16 @@ class RSNA24TestDataset(Dataset):
         pdf_ = pdf[pdf['series_description']==series_desc]
         allimgs = []
         for i, row in pdf_.iterrows():
-            pimgs = glob.glob(f'{RD}/test_images/{study_id}/{row["series_id"]}/*.dcm')
-            pimgs = sorted(pimgs, key=natural_keys)
-            allimgs.extend(pimgs)
+            if self.root_dir != None:
+                print(f">>> [IMPORTANT] USER HAS BEEN SPECIFIED A FOLDER IN {self.root_dir}")
+                pimgs = glob.glob(f'{self.root_dir}/test_images/{study_id}/{row["series_id"]}/*.dcm')
+                pimgs = sorted(pimgs, key=natural_keys)
+                allimgs.extend(pimgs)
+            else:
+                print(">>> [IMPORTANT] USER HAS NOT SPECIFIED A FOLDER YET...")
+                pimgs = glob.glob(f'{RD}/test_images/{study_id}/{row["series_id"]}/*.dcm')
+                pimgs = sorted(pimgs, key=natural_keys)
+                allimgs.extend(pimgs)
             
         return allimgs
     
@@ -289,6 +297,53 @@ def inference_model():
     # print(y_preds)
     return row_names, y_preds
 
+
+def inference_model_with_zip(root_dir):
+    print('[IMPORTANT] START inference_model() ...')
+    autocast, _ = get_amp_config()
+    df = load_data(root_dir)
+    study_ids = list(df['study_id'].unique())
+    transforms_test = A.Compose([
+        A.Resize(IMG_SIZE[0], IMG_SIZE[1]),
+        A.Normalize(mean=0.5, std=0.5)
+    ])
+    
+    test_ds = RSNA24TestDataset(df, study_ids, transform=transforms_test, root_dir=root_dir)
+    test_dl = DataLoader(
+        test_ds, 
+        batch_size=1, 
+        shuffle=False,
+        num_workers=N_WORKERS,
+        pin_memory=True,
+        drop_last=False
+    )
+    
+    models = load_models()
+    y_preds = []
+    row_names = []
+
+    with tqdm(test_dl, leave=True) as pbar:
+        with torch.no_grad():
+            for idx, (x, si) in enumerate(pbar):
+                x = x.to(device)
+                pred_per_study = np.zeros((25, 3))
+                
+                for cond in CONDITIONS:
+                    for level in LEVELS:
+                        row_names.append(si[0] + '_' + cond + '_' + level)
+                
+                with autocast:
+                    for m in models:
+                        y = m(x)[0]
+                        for col in range(N_LABELS):
+                            pred = y[col*3:col*3+3]
+                            y_pred = pred.float().softmax(0).cpu().numpy()
+                            pred_per_study[col] += y_pred / len(models)
+                    y_preds.append(pred_per_study)
+
+    y_preds = np.concatenate(y_preds, axis=0)
+    # print(y_preds)
+    return row_names, y_preds
 
 def output_result(row_names, y_preds):
     sample_sub = pd.read_csv(f'{RD}/sample_submission.csv')

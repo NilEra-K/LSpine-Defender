@@ -14,11 +14,11 @@
             </router-link>
             <router-link to="/stage-one" class="nav-item" active-class="active" @click="handleNavClick">
                 <i class="fas fa-microscope"></i>
-                <span>一阶段</span>
+                <span>成像方式预测</span>
             </router-link>
-            <router-link to="/feature-one" class="nav-item" active-class="active" @click="handleNavClick">
+            <router-link to="/severity-predict" class="nav-item" active-class="active" @click="handleNavClick">
                 <i class="fas fa-chart-line"></i>
-                <span>姿态检测</span>
+                <span>疾病严重性预测</span>
             </router-link>
             <router-link to="/feature-two" class="nav-item" active-class="active" @click="handleNavClick">
                 <i class="fas fa-chart-bar"></i>

@@ -9998,3 +9998,7 @@ laptop/src/backend/app/__pycache__
 laptop/src/backend/app/modules/api/__pycache__
 laptop/src/backend/app/modules/__pycache__
 workstation/data
+workstation/competition/utils/__pycache__
+workstation/backend/api/utils/__pycache__
+workstation/competition/one-stage/__pycache__
+workstation/competition/med-img-classify/__pycache__
