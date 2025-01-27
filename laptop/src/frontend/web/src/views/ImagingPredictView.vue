@@ -1,5 +1,5 @@
 <template>
-    <div class="stage-one-container">
+    <div class="imaging-predict-container">
         <!-- 标题和介绍部分 -->
         <div class="section-header">
             <h2>成像方式预测</h2>
@@ -17,12 +17,13 @@
                     <div class="upload-area" @drop.prevent="handleDrop" @dragover.prevent @click="triggerFileInput">
                         <input type="file" ref="fileInput" style="display: none" @change="handleFileChange"
                             accept="image/*">
-                        <div v-if="!originalImage" class="upload-placeholder">
+                        <div v-if="!originalImage && !isLoading" class="upload-placeholder">
                             <i class="fas fa-cloud-upload-alt"></i>
                             <p>点击或拖拽上传图片</p>
                             <span class="upload-hint">支持 jpg、png 格式</span>
                         </div>
-                        <img v-else :src="originalImage" alt="Original Image">
+                        <img v-else-if="originalImage" :src="originalImage" alt="Original Image">
+                        <div v-else class="loading"></div>
                     </div>
                 </div>
 
@@ -36,7 +37,7 @@
                         <i class="fas fa-trash-alt"></i>
                         清除
                     </button>
-                    <button class="action-btn predict" @click="handlePredict">
+                    <button class="action-btn predict" @click="handlePredict" :disabled="isLoading">
                         <i class="fas fa-play"></i>
                         预测
                     </button>
@@ -49,10 +50,11 @@
                     </div>
                     <div class="result-area">
                         <img v-if="resultImage" :src="resultImage" alt="Result Image">
-                        <div v-else class="result-placeholder">
+                        <div v-else-if="!isLoading" class="result-placeholder">
                             <i class="fas fa-image"></i>
                             <p>预测结果将在这里显示</p>
                         </div>
+                        <div v-else class="loading"></div>
                     </div>
                 </div>
 
@@ -88,7 +90,7 @@
 import axios from 'axios';
 
 export default {
-    name: 'StageOneView',
+    name: 'ImagingPredictView',
     data() {
         return {
             originalImage: null,
@@ -154,34 +156,29 @@ export default {
             }))
         },
         async handlePredict() {
-            // 实现预测逻辑
             if (!this.originalImage) {
                 alert('请先上传图片！');
                 return;
             }
             try {
-                this.isLoading = true;
-                // 将 base64 图片转换为 Blob
+                this.resultImage = null
+                this.resultList = Array(75).fill().map(() => ({
+                    parameter: '待测参数',
+                    value: '-'
+                }))
+                this.isLoading = true;  // 开始预测时设置加载状态
                 const base64Data = this.originalImage.split(',')[1];
                 const blob = await fetch(`data:image/jpeg;base64,${base64Data}`).then(res => res.blob());
-                
-                // 创建 FormData
                 const formData = new FormData();
                 formData.append('image', blob, 'image.jpg');
-
-                // 发送请求到后端
                 const response = await axios.post('http://127.0.0.1:16020/api/v1/mic-predict', formData, {
                     headers: {
                         'Content-Type': 'multipart/form-data'
                     }
                 });
-                
-                // 处理响应
                 if (response.data) {
-                    // 假设后端返回的数据格式为 { image: base64String, parameters: [...] }
                     this.resultImage = `data:image/jpeg;base64,${response.data.image}`;
-                    
-                    // 更新处理参数列表的逻辑
+                    console.log(response.data);
                     if (response.data.parameters) {
                         this.resultList = response.data.parameters.map(param => {
                             const [paramName, value] = Object.entries(param)[0];
@@ -196,7 +193,7 @@ export default {
                 console.error('预测失败:', error);
                 alert('预测失败，请重试！');
             } finally {
-                this.isLoading = false;
+                this.isLoading = false;  // 预测完成后结束加载状态
             }
         }
     }
@@ -204,7 +201,7 @@ export default {
 </script>
 
 <style scoped>
-.stage-one-container {
+.imaging-predict-container {
     padding: 1rem 2rem;
     background-color: #f8fafc;
     height: auto;
@@ -419,8 +416,13 @@ td {
 }
 
 @keyframes spin {
-    0% { transform: translate(-50%, -50%) rotate(0deg); }
-    100% { transform: translate(-50%, -50%) rotate(360deg); }
+    0% {
+        transform: translate(-50%, -50%) rotate(0deg);
+    }
+
+    100% {
+        transform: translate(-50%, -50%) rotate(360deg);
+    }
 }
 
 /* 预测按钮禁用状态 */
@@ -449,7 +451,7 @@ td {
 }
 
 @media (max-width: 768px) {
-    .stage-one-container {
+    .imaging-predict-container {
         padding: 0.5rem 1rem;
     }
 

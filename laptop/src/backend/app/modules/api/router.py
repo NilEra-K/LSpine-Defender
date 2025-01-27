@@ -88,6 +88,7 @@ def predict():
         
         response = {
             'image': img_str,
+            'label': predicted_label,
             'parameters': parameters
         }
         

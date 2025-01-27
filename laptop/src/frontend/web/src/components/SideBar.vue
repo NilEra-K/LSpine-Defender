@@ -12,7 +12,11 @@
                 <i class="fas fa-home"></i>
                 <span>首页</span>
             </router-link>
-            <router-link to="/stage-one" class="nav-item" active-class="active" @click="handleNavClick">
+            <router-link to="/feature-two" class="nav-item" active-class="active" @click="handleNavClick">
+                <i class="fas fa-chart-bar"></i>
+                <span>数据探索性分析</span>
+            </router-link>
+            <router-link to="/imaging-predict" class="nav-item" active-class="active" @click="handleNavClick">
                 <i class="fas fa-microscope"></i>
                 <span>成像方式预测</span>
             </router-link>
@@ -20,13 +24,9 @@
                 <i class="fas fa-chart-line"></i>
                 <span>疾病严重性预测</span>
             </router-link>
-            <router-link to="/feature-two" class="nav-item" active-class="active" @click="handleNavClick">
-                <i class="fas fa-chart-bar"></i>
-                <span>数据分析</span>
-            </router-link>
             <router-link to="/feature-three" class="nav-item" active-class="active" @click="handleNavClick">
                 <i class="fas fa-file-alt"></i>
-                <span>报告生成</span>
+                <span>接口API</span>
             </router-link>
         </nav>
         <div class="toggle-btn" @click="toggleSidebar">
