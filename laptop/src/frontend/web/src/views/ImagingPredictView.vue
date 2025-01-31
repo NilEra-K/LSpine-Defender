@@ -2,8 +2,13 @@
     <div class="imaging-predict-container">
         <!-- 标题和介绍部分 -->
         <div class="section-header">
-            <h2>成像方式预测</h2>
-            <p class="description">通过上传腰椎图像，系统将自动分析并生成相关参数指标</p>
+            <h2 style="font-size: large; font-family: 'Times New Roman', Times, serif;">🔥 基于ResNet50的成像方式预测</h2>
+            <p class="description">
+                * 通过上传腰椎图像，系统将对输入图像进行分类。<br>
+                * 分类类别为 Sagittal T1、Sagittal T2/STIR、Axial T2 三类。<br>
+                * 分类结果会显示在 Image Result 和 Result List 部分，Image Result 会显示用户输入图片的最终的分类结果，Result List 会显示每个类别的概率。<br>
+                * Tips: 当有预测结果时，可以点击 Image Result 显示/隐藏标签。
+            </p>
         </div>
 
         <!-- 主要内容区域 -->
@@ -48,13 +53,17 @@
                     <div class="box-header">
                         <h3>Image Result</h3>
                     </div>
-                    <div class="result-area">
+                    <div class="result-area" @click="toggleMask">
                         <img v-if="resultImage" :src="resultImage" alt="Result Image">
                         <div v-else-if="!isLoading" class="result-placeholder">
                             <i class="fas fa-image"></i>
                             <p>预测结果将在这里显示</p>
                         </div>
                         <div v-else class="loading"></div>
+                        <!-- 遮罩和标签 -->
+                        <div v-if="showMask" class="mask">
+                            <div class="label">{{ predictionLabel }}</div>
+                        </div>
                     </div>
                 </div>
 
@@ -99,7 +108,9 @@ export default {
                 parameter: '待测参数',
                 value: '-'
             })),
-            isLoading: false  // 添加加载状态
+            isLoading: false,  // 添加加载状态
+            showMask: false,  // 控制遮罩显示
+            predictionLabel: ''  // 预测标签
         }
     },
     methods: {
@@ -154,6 +165,8 @@ export default {
                 parameter: '待测参数',
                 value: '-'
             }))
+            this.showMask = false;
+            this.predictionLabel = '';
         },
         async handlePredict() {
             if (!this.originalImage) {
@@ -167,6 +180,8 @@ export default {
                     value: '-'
                 }))
                 this.isLoading = true;  // 开始预测时设置加载状态
+                this.predictionLabel = '';
+                this.showMask = false;
                 const base64Data = this.originalImage.split(',')[1];
                 const blob = await fetch(`data:image/jpeg;base64,${base64Data}`).then(res => res.blob());
                 const formData = new FormData();
@@ -178,6 +193,8 @@ export default {
                 });
                 if (response.data) {
                     this.resultImage = `data:image/jpeg;base64,${response.data.image}`;
+                    this.predictionLabel = response.data.label;  // 获取预测标签
+                    this.showMask = true;  // 显示遮罩和标签
                     console.log(response.data);
                     if (response.data.parameters) {
                         this.resultList = response.data.parameters.map(param => {
@@ -194,6 +211,12 @@ export default {
                 alert('预测失败，请重试！');
             } finally {
                 this.isLoading = false;  // 预测完成后结束加载状态
+            }
+        },
+        toggleMask() {
+            // this.showMask = !this.showMask;  // 切换遮罩显示状态
+            if (this.predictionLabel != '') {   // 当有预测结果时, 才能够切换遮罩显示状态
+                this.showMask = !this.showMask; // 切换遮罩显示状态
             }
         }
     }
@@ -222,6 +245,7 @@ export default {
 .description {
     color: #666;
     font-size: 1rem;
+    font-family: 'Times New Roman', Times, serif;
     margin: 0;
 }
 
@@ -269,6 +293,7 @@ export default {
     justify-content: center;
     overflow: hidden;
     background: #f8fafc;
+    position: relative;  /* 添加相对定位 */
 }
 
 .upload-area:hover {
@@ -429,6 +454,22 @@ td {
 .action-btn.predict:disabled {
     background-color: #9ca3af;
     cursor: not-allowed;
+}
+
+/* 遮罩和标签样式 */
+.mask {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.2rem;
+    font-weight: 600;
 }
 
 @media (max-width: 1280px) {

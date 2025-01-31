@@ -22,7 +22,10 @@
       </div>
       <div class="intro-card">
         <h3>系统介绍</h3>
-        <p>这是一个基于多模型优化的腰椎退行性病变分类系统。通过上传腰椎图像，系统将自动分析并生成相关参数指标，帮助医生进行更准确的诊断。</p>
+        <p>LSpine-Defender，全称 Lumbar-Spine Defender，脊柱卫士。</p>
+        <p>这是一款腰椎退行性病变分类系统，本系统基于多种算法和模型进行开发，包括 ResNet、DenseNet、CenterNet、EfficientNet等一系列模型。</p>
+        <p>本系统致力于使用前沿技术，做技术创新，对现有模型进行了改进。</p>
+        <p>上传腰椎图像，系统将自动分析并生成相关参数指标，帮助医生进行更准确的诊断。</p>
       </div>
     </div>
 
@@ -58,7 +61,6 @@ export default {
         require('@/assets/images/Sagittal_T2_STIR_00007_keypoint.png'),
         require('@/assets/images/Axial_T2_00000.png'),
         require('@/assets/images/Axial_T2_00000_keypoint.png'),
-        require('@/assets/images/None.png'),
       ],
       currentIndex: 0,
       intervalId: null, // 添加定时器ID

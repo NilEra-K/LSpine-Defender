@@ -12,7 +12,7 @@
                 <i class="fas fa-home"></i>
                 <span>首页</span>
             </router-link>
-            <router-link to="/feature-two" class="nav-item" active-class="active" @click="handleNavClick">
+            <router-link to="/data-eda" class="nav-item" active-class="active" @click="handleNavClick">
                 <i class="fas fa-chart-bar"></i>
                 <span>数据探索性分析</span>
             </router-link>
@@ -24,7 +24,7 @@
                 <i class="fas fa-chart-line"></i>
                 <span>疾病严重性预测</span>
             </router-link>
-            <router-link to="/feature-three" class="nav-item" active-class="active" @click="handleNavClick">
+            <router-link to="/api-doc" class="nav-item" active-class="active" @click="handleNavClick">
                 <i class="fas fa-file-alt"></i>
                 <span>接口API</span>
             </router-link>

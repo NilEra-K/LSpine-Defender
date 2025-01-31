@@ -2,8 +2,44 @@
   <div class="severity-predict-container">
     <!-- 标题和介绍部分 -->
     <div class="severity-predict-header">
-      <h2>疾病严重性预测</h2>
-      <p class="description">通过上传压缩包，系统将自动分析并生成相关参数指标</p>
+      <h2 style="font-size: large; font-family: 'Times New Roman', Times, serif;">🔥 疾病严重性预测</h2>
+      <p class="description">
+        * 通过上传压缩包，系统将自动分析并生成相关参数指标。<br>
+        * 预测结果会显示在 Result List 部分，为一个包含 row_id、normal_mild、moderate、severe 四列的表格。<br>
+        * 压缩包需要按照一定的格式进行组织，🔗请点击此处下载：<a href="/resource/test_images.zip">压缩包格式示例</a> 或 🖱️点击此处查看<a href="#"
+          @click.prevent="toggleFormatCard">压缩包格式示例</a><br>
+        * 算法包括 One-Stage 和 Multi-Stage 两种，其中 One-Stage 为 基于 KAN 和 CA 优化的 DenseNet 腰椎退行性病变分类预测，Multi-Stage 为基于多模型优化的腰椎退行性病变分类模型。
+      </p>
+    </div>
+    <!-- 格式卡片 -->
+    <div class="format-card" v-if="isFormatCardVisible">
+      <div class="card-content">
+        <h3>压缩包格式</h3>
+        <pre>
+file.zip/rar/tar/tar.gz
+├─ test_images
+│   └─ 44036939
+│        ├─ 2828203845
+│        │       1.dcm
+│        │       2.dcm
+│        │       3.dcm
+│        │       ...
+│        │      
+│        ├─ 3481971518
+│        │       1.dcm
+│        │       2.dcm
+│        │       3.dcm
+│        │       ...
+│        │      
+│        └─ 3844393089
+│                 1.dcm
+│                 2.dcm
+│                 3.dcm
+│                 ...
+└─ test_series_descriptions.csv
+        </pre>
+        <button @click="toggleFormatCard">关闭</button>
+      </div>
     </div>
 
     <!-- 主要内容区域 -->
@@ -50,7 +86,6 @@
               <option value="">请选择算法</option>
               <option value="algorithm1">One-Stage</option>
               <option value="algorithm2">Multi-Stage</option>
-              <option value="algorithm3">算法3</option>
             </select>
           </div>
         </div>
@@ -83,11 +118,18 @@
         </div>
       </div>
     </div>
+
+    <!-- 预测卡片 -->
+    <div class="predict-loading" v-if="isPredicting">
+      <div class="loading-card">
+        <div class="loading-spinner"></div>
+        <p>正在预测...</p>
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
-// 添加 axios 导入
 import axios from 'axios';
 
 export default {
@@ -102,19 +144,24 @@ export default {
         moderate: '-',
         severe: '-'
       })),
-      selectedAlgorithm: ''  // 添加算法选择
+      selectedAlgorithm: '',
+      isPredicting: false,        // 添加预测状态变量
+      isFormatCardVisible: false  // 格式卡片状态变量
     }
   },
   methods: {
     triggerFileInput() {
       this.$refs.fileInput.click()
     },
+    toggleFormatCard() {
+      this.isFormatCardVisible = !this.isFormatCardVisible;
+    },
     handleFileChange(event) {
       const file = event.target.files[0];
       if (file) {
         // 验证文件类型
         // console.log(file.type); // Edge 上传 Zip 文件显示 application/x-zip-compressed
-                                   // Windows7 上传 Zip 文件显示 application/octet-stream
+        // Windows7 上传 Zip 文件显示 application/octet-stream
         const fileTypes = ['application/zip', 'application/x-tar', 'application/gzip', 'application/x-zip-compressed', 'application/octet-stream'];
         if (!fileTypes.includes(file.type)) {
           alert('请上传压缩包文件！');
@@ -167,6 +214,9 @@ export default {
         alert('请选择算法！');
         return;
       }
+
+      this.isPredicting = true;  // 显示预测卡片
+
       try {
         // 创建 FormData
         const formData = new FormData();
@@ -184,19 +234,19 @@ export default {
         if (response.data) {
           // 更新处理参数列表的逻辑
           if (response.data.parameters) {
-            this.resultList = response.data.parameters.map(param => {
-              return {
-                row_id: param.row_id,
-                normal_mild: param.normal_mild,
-                moderate: param.moderate,
-                severe: param.severe
-              };
-            });
+            this.resultList = response.data.parameters.map(param => ({
+              row_id: param.row_id,
+              normal_mild: param.normal_mild,
+              moderate: param.moderate,
+              severe: param.severe
+            }));
           }
         }
       } catch (error) {
         console.error('预测失败:', error);
         alert('预测失败，请重试！');
+      } finally {
+        this.isPredicting = false;  // 隐藏预测卡片
       }
     }
   }
@@ -204,6 +254,64 @@ export default {
 </script>
 
 <style scoped>
+.format-card {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.card-content {
+  background: #fff;
+  box-sizing: border-box;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  padding-bottom: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  text-align: left;
+  width: 80%;
+  max-width: 600px;
+}
+
+.card-content h3 {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.card-content pre {
+  background: #f8fafc;
+  box-sizing: border-box;
+  padding: 1rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.card-content button {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  color: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 500;
+  display: inline-block;
+  margin-top: 1rem;
+  background-color: #2563eb;
+}
+
+.card-content button:hover {
+  background-color: #1d4ed8;
+}
+
 .severity-predict-container {
   padding: 1rem 2rem;
   background-color: #f8fafc;
@@ -225,6 +333,7 @@ export default {
 .description {
   color: #666;
   font-size: 1rem;
+  font-family: 'Times New Roman', Times, serif;
   margin: 0;
 }
 
@@ -408,7 +517,6 @@ export default {
   border-radius: 8px;
   background: #fff;
   width: 100%;
-  /* 确保列表容器占满可用宽度 */
 }
 
 table {
@@ -467,6 +575,48 @@ td {
   .predict-box,
   .predict-result-list {
     max-width: 100%;
+  }
+}
+
+/* 预测卡片样式 */
+.predict-loading {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.loading-card {
+  background: #fff;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  text-align: center;
+}
+
+.loading-spinner {
+  border: 4px solid rgba(0, 0, 0, 0.1);
+  border-top: 4px solid #2563eb;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 1rem;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
   }
 }
 </style>
