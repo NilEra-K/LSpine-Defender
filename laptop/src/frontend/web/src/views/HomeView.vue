@@ -1,7 +1,7 @@
 <template>
   <div class="home-view">
     <div class="welcome-section">
-      <h1>欢迎使用脊柱姿态评估系统</h1>
+      <h1>👋欢迎使用腰椎退行性病变分类系统</h1>
       <p class="subtitle">基于计算机视觉的智能评估解决方案</p>
     </div>
     
@@ -22,10 +22,11 @@
       </div>
       <div class="intro-card">
         <h3>系统介绍</h3>
-        <p>LSpine-Defender，全称 Lumbar-Spine Defender，脊柱卫士。</p>
-        <p>这是一款腰椎退行性病变分类系统，本系统基于多种算法和模型进行开发，包括 ResNet、DenseNet、CenterNet、EfficientNet等一系列模型。</p>
-        <p>本系统致力于使用前沿技术，做技术创新，对现有模型进行了改进。</p>
-        <p>上传腰椎图像，系统将自动分析并生成相关参数指标，帮助医生进行更准确的诊断。</p>
+        <p>LSpine-Defender，全称 Lumbar-Spine Defender，腰椎卫士。</p>
+        <p>这是一款腰椎退行性病变分类系统，本系统基于多种算法和模型进行开发，包括 ResNet、DenseNet、CenterNet、EfficientNet等一系列主流模型。</p>
+        <p>本系统旨在利用深度学习方法对 RSNA 提供的腰椎疾病图片进行分类，并在该数据集达到较好的效果。总体流程即通过对 RSNA 提供的 DICOM 格式文件，进行处理和探索性分析，根据探索性分析的结果，选择合适的骨干网络进行基准测试，最终选取合适的模型进行预测。</p>
+        <p>本系统致力于使用前沿技术，做技术创新，对现有模型进行了改进。最终本系统提供数据探索性分析的结果展示、成像方式预测功能、疾病严重性预测功能。</p>
+        <p>用户只需上传腰椎图像，LSpine-Defender 便能自动进行分析，并生成关键参数指标，从而辅助医生做出更准确的诊断。这一系统是医疗领域技术创新的典范，为腰椎疾病的诊断和治疗提供了强有力的工具。</p>
       </div>
     </div>
 
@@ -33,17 +34,17 @@
       <div class="feature-card">
         <i class="fas fa-camera"></i>
         <h3>成像方式预测</h3>
-        <p>实时捕捉和分析脊柱姿态</p>
+        <p>基于 ResNet50 的成像方式预测</p>
       </div>
       <div class="feature-card">
         <i class="fas fa-chart-line"></i>
-        <h3>数据分析</h3>
+        <h3>疾病严重性预测</h3>
         <p>深入分析评估结果</p>
       </div>
       <div class="feature-card">
-        <i class="fas fa-file-medical"></i>
-        <h3>报告生成</h3>
-        <p>生成专业评估报告</p>
+        <i class="fas fa-file-alt"></i>
+        <h3>接口API</h3>
+        <p>提供丰富的API结口</p>
       </div>
     </div>
   </div>
@@ -103,9 +104,10 @@ export default {
 }
 
 .welcome-section h1 {
-  font-size: 2.5rem;
+  font-size: 2.0rem;
   color: #2c3e50;
   margin-bottom: 1rem;
+  margin-top: 10px;
 }
 
 .subtitle {
@@ -215,6 +217,7 @@ export default {
 
 .intro-card h3 {
   font-size: 1.2rem;
+  font-family: 'Times New Roman', Times, serif;
   color: #1a1a1a;
   margin: 0 0 0.5rem;
   font-weight: 600;
@@ -222,9 +225,11 @@ export default {
 
 .intro-card p {
   font-size: 1rem;
+  font-family: 'Times New Roman', Times, serif;
   color: #666;
   margin: 0;
   text-align: left;
+  text-indent: 2em; /* 添加首行缩进 */
 }
 
 .features-grid {

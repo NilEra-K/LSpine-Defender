@@ -17,7 +17,7 @@
                 <span>数据探索性分析</span>
             </router-link>
             <router-link to="/imaging-predict" class="nav-item" active-class="active" @click="handleNavClick">
-                <i class="fas fa-microscope"></i>
+                <i class="fas fa-camera"></i>
                 <span>成像方式预测</span>
             </router-link>
             <router-link to="/severity-predict" class="nav-item" active-class="active" @click="handleNavClick">

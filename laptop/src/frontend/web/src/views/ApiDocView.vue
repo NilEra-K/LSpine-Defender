@@ -239,7 +239,8 @@ export default {
 <style scoped>
 .api-docs {
   margin: 20px auto 0 !important;
-  padding: 20px;
+  /* padding: 20px; */
+  padding: 1rem 2rem;
   position: relative;
   z-index: 10;
 }
