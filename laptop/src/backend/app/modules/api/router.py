@@ -7,10 +7,83 @@ import io
 from flask_cors import CORS
 import torch
 import importlib
+import pandas as pd
+
+# 使用 sys.path.append 配合 importlib 导入相关的包
 import sys
 sys.path.append("workstation/competition/med-img-classify")
-
 mic_predict = importlib.import_module("mic-predict")
+
+# 数据加载
+train_data_df = pd.read_csv('E:/RSNA-Dataset/train.csv')
+train_label_df = pd.read_csv('E:/RSNA-Dataset/train_label_coordinates.csv')
+train_desc_df = pd.read_csv('E:/RSNA-Dataset/train_series_descriptions.csv')
+
+df_train_step_1 = pd.merge(left=train_label_df, right=train_data_df, how='left', on='study_id').reset_index(drop=True)
+df_train_step_1.head()
+
+df_train = pd.merge(left=df_train_step_1, right=train_desc_df, how='left', on=['study_id', 'series_id']).reset_index(drop=True)
+df_train.head()
+
+subarticular_stenosis_columns = [column for column in df_train.columns if 'subarticular_stenosis' in column]
+df_train_subarticular_stenosis = []
+
+for column in subarticular_stenosis_columns:
+    df = df_train[[column]].copy(deep=True)
+    df['level'] = '_'.join(column.split('_')[-2:])
+    df = df.rename(columns={column: 'subarticular_stenosis'})
+    df_train_subarticular_stenosis.append(df)
+    
+df_train_subarticular_stenosis = pd.concat(df_train_subarticular_stenosis, axis=0).reset_index(drop=True)
+
+df_train_subarticular_stenosis_counts = df_train_subarticular_stenosis.groupby('level').value_counts().reset_index()
+df_train_subarticular_stenosis_counts['severity'] = df_train_subarticular_stenosis_counts['subarticular_stenosis'].map({
+    'Normal/Mild': 0,
+    'Moderate': 1,
+    'Severe': 2
+})
+df_train_subarticular_stenosis_counts = df_train_subarticular_stenosis_counts.sort_values(by=['level', 'severity'], ascending=True)
+df_train_subarticular_stenosis_counts['percentage'] = df_train_subarticular_stenosis_counts['count'] / df_train_subarticular_stenosis_counts.groupby('level')['count'].transform('sum') * 100
+
+left_subarticular_stenosis_columns = [column for column in df_train.columns if column.startswith('left_subarticular_stenosis')]
+df_train_left_subarticular_stenosis = []
+
+for column in left_subarticular_stenosis_columns:
+    df = df_train[[column]].copy(deep=True)
+    df['level'] = '_'.join(column.split('_')[-2:])
+    df = df.rename(columns={column: 'left_subarticular_stenosis'})
+    df_train_left_subarticular_stenosis.append(df)
+    
+df_train_left_subarticular_stenosis = pd.concat(df_train_left_subarticular_stenosis, axis=0).reset_index(drop=True)
+
+df_train_left_subarticular_stenosis_counts = df_train_left_subarticular_stenosis.groupby('level').value_counts().reset_index()
+df_train_left_subarticular_stenosis_counts['severity'] = df_train_left_subarticular_stenosis_counts['left_subarticular_stenosis'].map({
+    'Normal/Mild': 0,
+    'Moderate': 1,
+    'Severe': 2
+})
+df_train_left_subarticular_stenosis_counts = df_train_left_subarticular_stenosis_counts.sort_values(by=['level', 'severity'], ascending=True)
+df_train_left_subarticular_stenosis_counts['percentage'] = df_train_left_subarticular_stenosis_counts['count'] / df_train_left_subarticular_stenosis_counts.groupby('level')['count'].transform('sum') * 100
+
+right_subarticular_stenosis_columns = [column for column in df_train.columns if column.startswith('right_subarticular_stenosis')]
+df_train_right_subarticular_stenosis = []
+
+for column in right_subarticular_stenosis_columns:
+    df = df_train[[column]].copy(deep=True)
+    df['level'] = '_'.join(column.split('_')[-2:])
+    df = df.rename(columns={column: 'right_subarticular_stenosis'})
+    df_train_right_subarticular_stenosis.append(df)
+    
+df_train_right_subarticular_stenosis = pd.concat(df_train_right_subarticular_stenosis, axis=0).reset_index(drop=True)
+
+df_train_right_subarticular_stenosis_counts = df_train_right_subarticular_stenosis.groupby('level').value_counts().reset_index()
+df_train_right_subarticular_stenosis_counts['severity'] = df_train_right_subarticular_stenosis_counts['right_subarticular_stenosis'].map({
+    'Normal/Mild': 0,
+    'Moderate': 1,
+    'Severe': 2
+})
+df_train_right_subarticular_stenosis_counts = df_train_right_subarticular_stenosis_counts.sort_values(by=['level', 'severity'], ascending=True)
+df_train_right_subarticular_stenosis_counts['percentage'] = df_train_right_subarticular_stenosis_counts['count'] / df_train_right_subarticular_stenosis_counts.groupby('level')['count'].transform('sum') * 100
 
 api = Blueprint('api', __name__)
 CORS(api, resources={
@@ -97,6 +170,72 @@ def predict():
     except Exception as e:
         print(f"错误: {str(e)}")
         return jsonify({'error': str(e)}), 500
+    
+
+@api.route('/eda/heatmap', methods=['GET'])
+def get_heatmap_data():
+    cols = train_data_df.columns[1:]
+    df_temp = train_data_df.copy()
+    for column in cols:
+        df_temp[column] = df_temp[column].astype('category').cat.codes
+
+    # 计算相关性矩阵
+    correlation_matrix = df_temp.corr()
+
+    # 准备热图的数据
+    x_axis = correlation_matrix.columns.tolist()
+    y_axis = correlation_matrix.index.tolist()
+
+    # 将相关性矩阵转换为 pyecharts 需要的二维列表格式
+    data = []
+    for i in range(len(y_axis)):
+        for j in range(len(x_axis)):
+            data.append([y_axis[i], x_axis[j], round(correlation_matrix.iloc[i, j], 2)])
+            # data.append([i, j, round(correlation_matrix.iloc[i, j], 2)])
+
+    print(data)
+    # cols = train_data_df.columns[1:]
+    # df_temp = train_data_df.copy()
+    # for column in cols:
+    #     df_temp[column] = df_temp[column].astype('category').cat.codes
+
+    # # 计算相关性矩阵
+    # correlation_matrix = df_temp.corr()
+
+    # # 准备热图的数据
+    # x_axis = correlation_matrix.columns.tolist()
+    # y_axis = correlation_matrix.index.tolist()
+
+    # # 将相关性矩阵转换为前端需要的二维列表格式
+    # data = []
+    # for i in range(len(y_axis)):
+    #     for j in range(len(x_axis)):
+    #         data.append([j, i, round(correlation_matrix.iloc[i, j], 2)])  # 注意：前端需要 [x, y, value] 格式
+    
+    print(data)
+
+    # 返回数据
+    return jsonify({
+        "title": "不同节段不同疾病的相关性矩阵",
+        "xAxis": x_axis,
+        "yAxis": y_axis,
+        "data": data
+    })
+
+@api.route('/eda/subarticular_stenosis_counts')
+def get_subarticular_stenosis_counts():
+    data = df_train_subarticular_stenosis_counts.to_dict(orient='records')
+    return jsonify(data)
+
+@api.route('/eda/left_subarticular_stenosis_counts')
+def get_left_subarticular_stenosis_counts():
+    data = df_train_left_subarticular_stenosis_counts.to_dict(orient='records')
+    return jsonify(data)
+
+@api.route('/eda/right_subarticular_stenosis_counts')
+def get_right_subarticular_stenosis_counts():
+    data = df_train_right_subarticular_stenosis_counts.to_dict(orient='records')
+    return jsonify(data)
 
 @api.route('/v1/test', methods=['GET'])
 def test():
