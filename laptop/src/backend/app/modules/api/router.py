@@ -25,6 +25,7 @@ df_train_step_1.head()
 df_train = pd.merge(left=df_train_step_1, right=train_desc_df, how='left', on=['study_id', 'series_id']).reset_index(drop=True)
 df_train.head()
 
+# 关节下狭窄数据加载
 subarticular_stenosis_columns = [column for column in df_train.columns if 'subarticular_stenosis' in column]
 df_train_subarticular_stenosis = []
 
@@ -85,6 +86,91 @@ df_train_right_subarticular_stenosis_counts['severity'] = df_train_right_subarti
 df_train_right_subarticular_stenosis_counts = df_train_right_subarticular_stenosis_counts.sort_values(by=['level', 'severity'], ascending=True)
 df_train_right_subarticular_stenosis_counts['percentage'] = df_train_right_subarticular_stenosis_counts['count'] / df_train_right_subarticular_stenosis_counts.groupby('level')['count'].transform('sum') * 100
 
+# 神经孔狭窄数据加载
+neural_foraminal_narrowing_columns = [column for column in df_train.columns if 'neural_foraminal_narrowing' in column]
+df_train_neural_foraminal_narrowing = []
+
+for column in neural_foraminal_narrowing_columns:
+    df = df_train[[column]].copy(deep=True)
+    df['level'] = '_'.join(column.split('_')[-2:])
+    df = df.rename(columns={column: 'neural_foraminal_narrowing'})
+    df_train_neural_foraminal_narrowing.append(df)
+    
+df_train_neural_foraminal_narrowing = pd.concat(df_train_neural_foraminal_narrowing, axis=0).reset_index(drop=True)
+
+df_train_neural_foraminal_narrowing_counts = df_train_neural_foraminal_narrowing.groupby('level').value_counts().reset_index()
+df_train_neural_foraminal_narrowing_counts['severity'] = df_train_neural_foraminal_narrowing_counts['neural_foraminal_narrowing'].map({
+    'Normal/Mild': 0,
+    'Moderate': 1,
+    'Severe': 2
+})
+df_train_neural_foraminal_narrowing_counts = df_train_neural_foraminal_narrowing_counts.sort_values(by=['level', 'severity'], ascending=True)
+df_train_neural_foraminal_narrowing_counts['percentage'] = df_train_neural_foraminal_narrowing_counts['count'] / df_train_neural_foraminal_narrowing_counts.groupby('level')['count'].transform('sum') * 100
+
+left_neural_foraminal_narrowing_columns = [column for column in df_train.columns if column.startswith('left_neural_foraminal_narrowing')]
+df_train_left_neural_foraminal_narrowing = []
+
+for column in left_neural_foraminal_narrowing_columns:
+    df = df_train[[column]].copy(deep=True)
+    df['level'] = '_'.join(column.split('_')[-2:])
+    df = df.rename(columns={column: 'left_neural_foraminal_narrowing'})
+    df_train_left_neural_foraminal_narrowing.append(df)
+    
+df_train_left_neural_foraminal_narrowing = pd.concat(df_train_left_neural_foraminal_narrowing, axis=0).reset_index(drop=True)
+
+df_train_left_neural_foraminal_narrowing_counts = df_train_left_neural_foraminal_narrowing.groupby('level').value_counts().reset_index()
+df_train_left_neural_foraminal_narrowing_counts['severity'] = df_train_left_neural_foraminal_narrowing_counts['left_neural_foraminal_narrowing'].map({
+    'Normal/Mild': 0,
+    'Moderate': 1,
+    'Severe': 2
+})
+df_train_left_neural_foraminal_narrowing_counts = df_train_left_neural_foraminal_narrowing_counts.sort_values(by=['level', 'severity'], ascending=True)
+df_train_left_neural_foraminal_narrowing_counts['percentage'] = df_train_left_neural_foraminal_narrowing_counts['count'] / df_train_left_neural_foraminal_narrowing_counts.groupby('level')['count'].transform('sum') * 100
+
+right_neural_foraminal_narrowing_columns = [column for column in df_train.columns if column.startswith('right_neural_foraminal_narrowing')]
+df_train_right_neural_foraminal_narrowing = []
+
+for column in right_neural_foraminal_narrowing_columns:
+    df = df_train[[column]].copy(deep=True)
+    df['level'] = '_'.join(column.split('_')[-2:])
+    df = df.rename(columns={column: 'right_neural_foraminal_narrowing'})
+    df_train_right_neural_foraminal_narrowing.append(df)
+    
+df_train_right_neural_foraminal_narrowing = pd.concat(df_train_right_neural_foraminal_narrowing, axis=0).reset_index(drop=True)
+
+df_train_right_neural_foraminal_narrowing_counts = df_train_right_neural_foraminal_narrowing.groupby('level').value_counts().reset_index()
+df_train_right_neural_foraminal_narrowing_counts['severity'] = df_train_right_neural_foraminal_narrowing_counts['right_neural_foraminal_narrowing'].map({
+    'Normal/Mild': 0,
+    'Moderate': 1,
+    'Severe': 2
+})
+df_train_right_neural_foraminal_narrowing_counts = df_train_right_neural_foraminal_narrowing_counts.sort_values(by=['level', 'severity'], ascending=True)
+df_train_right_neural_foraminal_narrowing_counts['percentage'] = df_train_right_neural_foraminal_narrowing_counts['count'] / df_train_right_neural_foraminal_narrowing_counts.groupby('level')['count'].transform('sum') * 100
+
+# 椎管狭窄数据
+spinal_canal_stenosis_columns = [column for column in df_train.columns if column.startswith('spinal_canal_stenosis')]
+df_train_spinal_canal_stenosis = []
+
+for column in spinal_canal_stenosis_columns:
+    df = df_train[[column]].copy(deep=True)
+    df['level'] = '_'.join(column.split('_')[-2:])
+    df = df.rename(columns={column: 'spinal_canal_stenosis'})
+    df_train_spinal_canal_stenosis.append(df)
+    
+df_train_spinal_canal_stenosis = pd.concat(df_train_spinal_canal_stenosis, axis=0).reset_index(drop=True)
+
+df_train_spinal_canal_stenosis_counts = df_train_spinal_canal_stenosis.groupby('level').value_counts().reset_index()
+df_train_spinal_canal_stenosis_counts['severity'] = df_train_spinal_canal_stenosis_counts['spinal_canal_stenosis'].map({
+    'Normal/Mild': 0,
+    'Moderate': 1,
+    'Severe': 2
+})
+df_train_spinal_canal_stenosis_counts = df_train_spinal_canal_stenosis_counts.sort_values(by=['level', 'severity'], ascending=True)
+df_train_spinal_canal_stenosis_counts['percentage'] = df_train_spinal_canal_stenosis_counts['count'] / df_train_spinal_canal_stenosis_counts.groupby('level')['count'].transform('sum') * 100
+
+df_train_spinal_canal_stenosis_counts
+
+# 后端
 api = Blueprint('api', __name__)
 CORS(api, resources={
     r"/v1/*": {
@@ -236,6 +322,76 @@ def get_left_subarticular_stenosis_counts():
 def get_right_subarticular_stenosis_counts():
     data = df_train_right_subarticular_stenosis_counts.to_dict(orient='records')
     return jsonify(data)
+
+@api.route('/eda/neural_foraminal_narrowing_counts')
+def get_neural_foraminal_narrowing_counts():
+    data = df_train_neural_foraminal_narrowing_counts.to_dict(orient='records')
+    return jsonify(data)
+
+@api.route('/eda/left_neural_foraminal_narrowing_counts')
+def get_left_neural_foraminal_narrowing_counts():
+    data = df_train_left_neural_foraminal_narrowing_counts.to_dict(orient='records')
+    return jsonify(data)
+
+@api.route('/eda/right_neural_foraminal_narrowing_counts')
+def get_right_neural_foraminal_narrowing_counts():
+    data = df_train_right_neural_foraminal_narrowing_counts.to_dict(orient='records')
+    return jsonify(data)
+
+@api.route('/eda/spinal_canal_stenosis_counts')
+def get_():
+    data = df_train_spinal_canal_stenosis_counts.to_dict(orient='records')
+    return jsonify(data)
+
+@api.route('/eda/series_counts', methods=['GET'])
+def get_series_counts():
+    # Grouping by study_id and counting series_id occurrences
+    series_counts = train_desc_df.groupby('study_id')['series_id'].count().value_counts().sort_index()
+    
+    # Prepare data for the frontend
+    x_data = series_counts.index.astype(str).tolist()  # X轴数据
+    y_data = series_counts.values.tolist()  # Y轴数据
+    
+    return jsonify({
+        'xAxis': x_data,
+        'yAxis': y_data
+    })
+
+@api.route('/eda/mri_image_coordinates_overview', methods=['GET'])
+def get_scatter_data_overview():
+    # Prepare data for the frontend
+    x_data = df_train['x'].tolist()  # X轴数据
+    y_data = df_train['y'].tolist()  # Y轴数据
+    
+    return jsonify({
+        'xAxis': x_data,
+        'yAxis': y_data
+    })
+
+@api.route('/eda/mri_image_coordinates_condition', methods=['GET'])
+def get_scatter_data_condition():
+    # Prepare data for the frontend
+    conditions = df_train['condition'].unique().tolist()
+    scatter_data = []
+    for condition in conditions:
+        condition_data = df_train[df_train['condition'] == condition][['x', 'y']].values.tolist()
+        scatter_data.append({
+            'name': condition,
+            'data': condition_data
+        })
+    return jsonify(scatter_data)
+
+@api.route('/eda/mri_image_coordinates_level', methods=['GET'])
+def get_scatter_data_level():
+    # Prepare data for the frontend
+    x_data = df_train['x'].tolist()  # X轴数据
+    y_data = df_train['y'].tolist()  # Y轴数据
+    
+    return jsonify({
+        'xAxis': x_data,
+        'yAxis': y_data
+    })
+
 
 @api.route('/v1/test', methods=['GET'])
 def test():
